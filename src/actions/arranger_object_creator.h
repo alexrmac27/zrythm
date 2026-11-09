@@ -190,6 +190,24 @@ public:
     double                             startTicks,
     int                                pitch);
 
+  /**
+   * @brief Adds an undoable MIDI note to a clip.
+   *
+   * @param clip The non-null owning MIDI clip.
+   * @param startTicks The non-negative start position in content ticks.
+   * @param lengthTicks The duration in content ticks, at least one tick.
+   * @param pitch The MIDI pitch, from 0 to 127.
+   * @param velocity The MIDI velocity, from 1 to 127.
+   * @return The created note, or nullptr if the parameters are invalid or the
+   * note could not be attached.
+   */
+  Q_INVOKABLE structure::arrangement::MidiNote * addMidiNoteWithLength (
+    structure::arrangement::MidiClip * clip,
+    double                             startTicks,
+    double                             lengthTicks,
+    int                                pitch,
+    int                                velocity);
+
   Q_INVOKABLE structure::arrangement::AutomationPoint * addAutomationPoint (
     structure::arrangement::AutomationClip * clip,
     double                                   startTicks,

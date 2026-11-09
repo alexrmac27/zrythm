@@ -75,6 +75,11 @@ GridLayout {
 
     leftItems: [
       ToolButton {
+        text: qsTr("Step Sequencer")
+
+        onClicked: drumStepSequencer.open()
+      },
+      ToolButton {
         checkable: true
         checked: false
         icon.source: ResourceManager.getIconUrl("font-awesome", "drum-solid.svg")
@@ -102,6 +107,15 @@ GridLayout {
         }
       }
     ]
+  }
+
+  DrumStepSequencer {
+    id: drumStepSequencer
+
+    midiClip: root.midiClip
+    objectCreator: root.session.arrangerObjectCreator
+    selectionOperator: root.selectionOperator
+    tempoMap: root.project.tempoMap
   }
 
   Ruler {

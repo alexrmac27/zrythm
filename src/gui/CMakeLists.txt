@@ -267,6 +267,8 @@ set(rel_qml_file_paths
   components/editors/AudioTransformStackPanel.qml
   components/editors/AutomationEditorPane.qml
   components/editors/ClipEditorGrid.qml
+  components/editors/DrumStepGrid.qml
+  components/editors/DrumStepSequencer.qml
   components/editors/MidiEditorPane.qml
   components/editors/ChordEditorPane.qml
   components/editors/PianoRollKeys.qml

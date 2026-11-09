@@ -32,6 +32,7 @@ in C++23 using Qt/QML and JUCE.
 - Editing tools: pencil, eraser, cut, ramp and audition
 - Multiple lanes per track
 - Piano roll (MIDI editor) with velocity editor
+- MIDI drum step sequencer for instrument tracks
 - Chord pad, chord editor and chord suggestions
 - Audio editor with adjustable gain/fades
 - Musical mode with offline time-stretching

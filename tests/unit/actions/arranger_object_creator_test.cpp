@@ -313,6 +313,61 @@ TEST_F (ArrangerObjectCreatorTest, AddMidiControlEvent)
   }));
 }
 
+TEST_F (ArrangerObjectCreatorTest, AddMidiNoteWithLengthUndoRedo)
+{
+  auto track_ref =
+    track_factory_->create_empty_track<structure::tracks::MidiTrack> ();
+  auto * midi_track = track_ref.get_object_as<structure::tracks::MidiTrack> ();
+  track_collection_->add_track (track_ref);
+  auto * lanes = midi_track->lanes ();
+  lanes->create_missing_lanes (0);
+  auto clip_ref = creator->add_midi_clip_for_recording (
+    *midi_track, *lanes->at (0), units::ticks (0.0));
+  auto * clip = clip_ref.get_object_as<structure::arrangement::MidiClip> ();
+  ASSERT_NE (clip, nullptr);
+
+  auto * note = creator->addMidiNoteWithLength (clip, 240.0, 120.0, 38, 90);
+  ASSERT_NE (note, nullptr);
+  EXPECT_DOUBLE_EQ (note->position ()->ticks (), 240.0);
+  EXPECT_DOUBLE_EQ (note->length ()->ticks (), 120.0);
+  EXPECT_EQ (note->pitch (), 38);
+  EXPECT_EQ (note->velocity (), 90);
+
+  auto * notes = clip->midiNotes ();
+  EXPECT_EQ (notes->rowCount (), 1);
+  undo_stack_->undo ();
+  EXPECT_EQ (notes->rowCount (), 0);
+  undo_stack_->redo ();
+  ASSERT_EQ (notes->rowCount (), 1);
+  EXPECT_DOUBLE_EQ (note->length ()->ticks (), 120.0);
+  EXPECT_EQ (note->pitch (), 38);
+  EXPECT_EQ (note->velocity (), 90);
+}
+
+TEST_F (ArrangerObjectCreatorTest, AddMidiNoteWithLengthRejectsInvalidInput)
+{
+  auto track_ref =
+    track_factory_->create_empty_track<structure::tracks::MidiTrack> ();
+  auto * midi_track = track_ref.get_object_as<structure::tracks::MidiTrack> ();
+  track_collection_->add_track (track_ref);
+  auto * lanes = midi_track->lanes ();
+  lanes->create_missing_lanes (0);
+  auto clip_ref = creator->add_midi_clip_for_recording (
+    *midi_track, *lanes->at (0), units::ticks (0.0));
+  auto * clip = clip_ref.get_object_as<structure::arrangement::MidiClip> ();
+  ASSERT_NE (clip, nullptr);
+  const int undo_count = undo_stack_->count ();
+
+  EXPECT_EQ (creator->addMidiNoteWithLength (nullptr, 0, 240, 36, 90), nullptr);
+  EXPECT_EQ (creator->addMidiNoteWithLength (clip, -1, 240, 36, 90), nullptr);
+  EXPECT_EQ (creator->addMidiNoteWithLength (clip, 0, 0, 36, 90), nullptr);
+  EXPECT_EQ (creator->addMidiNoteWithLength (clip, 0, 0.5, 36, 90), nullptr);
+  EXPECT_EQ (creator->addMidiNoteWithLength (clip, 0, 240, 128, 90), nullptr);
+  EXPECT_EQ (creator->addMidiNoteWithLength (clip, 0, 240, 36, 0), nullptr);
+  EXPECT_EQ (clip->midiNotes ()->rowCount (), 0);
+  EXPECT_EQ (undo_stack_->count (), undo_count);
+}
+
 TEST_F (ArrangerObjectCreatorTest, AddMidiControlEventPitchBend)
 {
   auto track_ref =

@@ -316,6 +316,35 @@ ArrangerObjectCreator::addMidiNote (
     *clip, units::ticks (startTicks), pitch);
 }
 
+structure::arrangement::MidiNote *
+ArrangerObjectCreator::addMidiNoteWithLength (
+  structure::arrangement::MidiClip * clip,
+  double                             startTicks,
+  double                             lengthTicks,
+  int                                pitch,
+  int                                velocity)
+{
+  if (
+    clip == nullptr || startTicks < 0.0 || lengthTicks < 1.0 || pitch < 0
+    || pitch > 127 || velocity < 1 || velocity > 127)
+    {
+      z_warning ("Invalid MIDI note parameters");
+      return nullptr;
+    }
+
+  auto note_ref =
+    arranger_object_factory_.get_builder<structure::arrangement::MidiNote> ()
+      .with_start_ticks (units::ticks (startTicks))
+      .with_pitch (pitch)
+      .with_velocity (velocity)
+      .build_in_registry ();
+  auto * note = note_ref.get_object_as<structure::arrangement::MidiNote> ();
+  note->length ()->setTicks (lengthTicks);
+  if (!push_add_command<structure::arrangement::MidiNote> (*clip, note_ref))
+    return nullptr;
+  return note;
+}
+
 structure::arrangement::AutomationPoint *
 ArrangerObjectCreator::addAutomationPoint (
   structure::arrangement::AutomationClip * clip,
