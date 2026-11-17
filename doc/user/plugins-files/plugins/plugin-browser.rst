@@ -49,6 +49,10 @@ Filter Buttons
 Additionally to the above, plugins can be filtered
 based on their type.
 
+Quick filters for instruments, effects, MIDI plugins, modulators, and favorites
+are shown below the search field. Use the :guilabel:`Filters` menu to combine
+these with plugin formats.
+
 .. figure:: /_static/img/plugin-filter-buttons.png
    :align: center
 
@@ -60,8 +64,28 @@ the various types of plugins there are.
 Keyword Search
 --------------
 
-Plugins can also be searched by keywords using the
-provided search bar.
+Use the search bar to find plugins by name, vendor,
+category, or format. Multiple words can match different
+fields; for example, ``vst3 synth`` finds VST3 plugins
+with ``synth`` in their metadata.
+
+Recommended Free Plugins
+------------------------
+
+Zrythm ships a helper script that downloads and
+installs recommended free and open source plugins
+into the per-user plugin directories that Zrythm
+scans by default::
+
+  tools/fetch_free_plugins.sh
+
+This installs the Surge XT, Dexed and Odin 2
+synthesizers and the BYOD guitar effect (VST3, CLAP
+and LV2 where available). Pass plugin names to
+install only some of them, ``cardinal`` to also
+install the Cardinal modular synth (large download),
+or ``--list`` to see the supported plugins. After
+installing, rescan plugins to pick them up.
 
 Collections
 -----------
