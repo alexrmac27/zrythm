@@ -305,6 +305,7 @@ set(rel_qml_file_paths
   components/NotificationCenterPopover.qml
   components/PlayheadTriangle.qml
   components/PluginBrowserPage.qml
+  components/PluginSearchMatcher.qml
   components/PluginInspectorPage.qml
   components/PluginParameterListView.qml
   components/PluginSelectionModel.qml

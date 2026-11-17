@@ -42,6 +42,13 @@ Item {
       }
     ].concat(specEntries) : specEntries;
   }
+  readonly property var quickFilters: [
+    { key: "instrument", label: qsTr("Instruments") },
+    { key: "effect", label: qsTr("Effects") },
+    { key: "midi", label: qsTr("MIDI") },
+    { key: "modulator", label: qsTr("Modulators") },
+    { key: "favorites", label: qsTr("Favorites") }
+  ]
   required property AppSettings appSettings
   readonly property color fadedTextColor: QmlUtils.adjustOpacity(palette.text, 0.6)
   // Favorited plugin descriptors, as "format:uniqueId" keys, persisted in
@@ -69,6 +76,17 @@ Item {
     favoritesOnly = false;
   }
 
+  function quickFilterChecked(key: string): bool {
+    return key === "favorites" ? favoritesOnly : selectedTypes.includes(key);
+  }
+
+  function setQuickFilter(key: string, checked: bool) {
+    if (key === "favorites")
+      favoritesOnly = checked;
+    else
+      toggleTypeFilter(key, checked);
+  }
+
   function descriptorFavoriteKey(descriptor: PluginDescriptor): string {
     return descriptor.format + ":" + descriptor.uniqueId;
   }
@@ -84,6 +102,10 @@ Item {
 
   function toggleTypeFilter(key: string, selected: bool) {
     selectedTypes = selected ? selectedTypes.concat([key]) : selectedTypes.filter(k => k !== key);
+  }
+
+  PluginSearchMatcher {
+    id: pluginSearchMatcher
   }
 
   Synchronizer on favoriteKeys {
@@ -119,7 +141,8 @@ Item {
         property string searchText: pluginSearch.text
 
         function filter(data: RoleData): bool {
-          return data.name.toLowerCase().includes(searchText.toLowerCase());
+          const descriptor = data.descriptor;
+          return pluginSearchMatcher.matches(searchText, data.name, descriptor.vendor, descriptor.category, descriptor.format);
         }
 
         onSearchTextChanged: invalidate()
@@ -172,7 +195,7 @@ Item {
         id: pluginSearch
 
         Layout.fillWidth: true
-        placeholderText: qsTr("Search plugins")
+        placeholderText: qsTr("Search name, vendor, category or format")
 
         Synchronizer on text {
           sourceObject: root.appSettings
@@ -311,6 +334,26 @@ Item {
               }
             }
           }
+        }
+      }
+    }
+
+    Flow {
+      Layout.fillWidth: true
+      spacing: 4
+      visible: root.hasScannedPlugins
+
+      Repeater {
+        model: root.quickFilters
+
+        delegate: ToolButton {
+          required property var modelData
+
+          checkable: true
+          checked: root.quickFilterChecked(modelData.key)
+          text: modelData.label
+
+          onToggled: root.setQuickFilter(modelData.key, checked)
         }
       }
     }
