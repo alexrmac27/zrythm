@@ -1,0 +1,88 @@
+# SPDX-FileCopyrightText: © 2026 Alexandros Theodotou <alex@zrythm.org>
+# SPDX-License-Identifier: LicenseRef-ZrythmLicense
+#
+# Windows x64 build, mirroring the GitLab `configure:windows` /
+# `build:windows` jobs. Conan builds all dependencies (including Qt)
+# from source, so the configure job needs a long timeout.
+
+name: windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - K1
+
+env:
+  BUILD_TYPE: Release
+  HOST_PROFILE: msvc_release
+  BUILD_PROFILE: msvc_release
+
+jobs:
+  configure:
+    runs-on: windows-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Enable MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Set up Conan
+        run: |
+          conan config install conan
+          conan remote add conan-local-index "$env:GITHUB_WORKSPACE/ext/conan-center-index"
+          python tools/export_conan_recipes.py
+
+      - name: Install C++ dependencies
+        run: conan install . -pr:h $env:HOST_PROFILE -pr:b $env:BUILD_PROFILE --build=missing --lockfile=conan.lock
+
+      - name: Configure
+        run: cmake --preset default -DZRYTHM_WITH_ASIO=OFF
+
+      - name: Upload configured build tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: conanbuild-${{ env.BUILD_TYPE }}
+          path: conanbuild/${{ env.BUILD_TYPE }}
+          retention-days: 1
+
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 330
+    needs: configure
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Enable MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Download configured build tree
+        uses: actions/download-artifact@v4
+        with:
+          name: conanbuild-${{ env.BUILD_TYPE }}
+          path: conanbuild/${{ env.BUILD_TYPE }}
+
+      - name: Build
+        run: cmake --build "conanbuild/$env:BUILD_TYPE" --config "$env:BUILD_TYPE" --parallel
+
+      - name: Package (ZIP)
+        run: cpack -G ZIP -C $env:BUILD_TYPE --config "conanbuild/$env:BUILD_TYPE/CPackConfig.cmake" -B package
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: zrythm-${{ env.BUILD_TYPE }}-win64
+          path: package/*.zip
